@@ -28,14 +28,6 @@ Install the project dependencies.
 go get
 ```
 
-#### Edit the config file
-
-Copy the code from `sample.env` and create a new file called `.env`. Paste in the code and enter your API key you generated in the [Deepgram console](https://console.deepgram.com/).
-
-```js
-DEEPGRAM_API_KEY=%api_key%
-```
-
 #### Select branch
 
 The `main` branch demonstrates a basic implementation, where text is sent to the API and an audio file response with synthesized text-to-speech is returned.
@@ -46,6 +38,20 @@ Checkout the other branches to see added functionality:
 
 ```bash
 git checkout output-streaming
+```
+
+#### Set your Deepgram API key
+
+If using bash, this can be done in your `~/.bash_profile` like so:
+
+```bash
+export DEEPGRAM_API_KEY="YOUR_DEEPGRAM_API_KEY"
+```
+
+or this could also be done by a simple export before executing your Go application:
+
+```bash
+DEEPGRAM_API_KEY="YOUR_DEEPGRAM_API_KEY" go run main.go
 ```
 
 #### Run the application
