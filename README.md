@@ -1,4 +1,4 @@
-# Text-to-Speech Starter (Python)
+# Text-to-Speech Starter (Go)
 
 This example app demonstrates how to use the Deepgram Text-to-Speech API with Go.
 
