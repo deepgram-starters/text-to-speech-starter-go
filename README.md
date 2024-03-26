@@ -30,7 +30,7 @@ go get
 
 #### Select branch
 
-The `main` branch demonstrates a basic implementation, where text is sent to the API and an audio file response with synthesized text-to-speech is returned.
+The `main` branch demonstrates a basic implementation: text is sent to the API and an audio file response with synthesized text-to-speech is returned.
 
 Checkout the other branches to see added functionality:
 
