@@ -34,7 +34,7 @@ The `main` branch demonstrates a basic implementation: text is sent to the API a
 
 Checkout the other branches to see added functionality:
 
-- [output streaming](https://github.com/deepgram-starters/text-to-speech-starter-go/tree/output-streaming): Demonstrates how to take advantage of Deepgram's output streaming feature. This example streams the audio response to the client as it is being generated.
+- [output streaming](https://github.com/deepgram-starters/text-to-speech-starter-go/tree/output-streaming): Demonstrates how to take advantage of Deepgram's output streaming feature. This example streams the audio response to the client as it is being generated. Read more at [Deepgram's output streaming guide].(https://developers.deepgram.com/docs/streaming-the-audio-output)
 
 ```bash
 git checkout output-streaming

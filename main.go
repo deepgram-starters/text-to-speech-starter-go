@@ -4,22 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"os"
 
 	speak "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/pkg/client/speak"
 )
 
-const (
-	audioFolder = "./public/audio/"
-)
-
-func synthesizeAudio(text string, model string) (string, error) {
-
+func synthesizeAudioStream(text string, model string) (interfaces.RawResponse, error) {
 	ctx := context.Background()
 
 	options := interfaces.SpeakOptions{
@@ -27,25 +20,22 @@ func synthesizeAudio(text string, model string) (string, error) {
 	}
 
 	// Create a new Deepgram client
-	// Note: The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 	c := client.NewWithDefaults()
 	dg := speak.New(c)
 
-	// Create the directory if it doesn't exist
-	if err := os.MkdirAll(audioFolder, 0755); err != nil {
-		return "", fmt.Errorf("failed to create directory: %w", err)
-	}
+	// Initialize a buffer to store the audio data
+	var buffer interfaces.RawResponse
 
-	_, err := dg.ToSave(ctx, audioFolder+"output.mp3", text, options)
+	// Stream the audio directly to the provided buffer
+	_, err := dg.ToStream(ctx, text, options, &buffer)
 	if err != nil {
-		return "", err
+		return buffer, err
 	}
 
-	return audioFolder + "output.mp3", nil
+	return buffer, nil
 }
 
 func handleSynthesizeSpeech(w http.ResponseWriter, r *http.Request) {
-
 	var requestData struct {
 		Text  string `json:"text"`
 		Model string `json:"model"`
@@ -62,26 +52,19 @@ func handleSynthesizeSpeech(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	audioFilePath, err := synthesizeAudio(requestData.Text, requestData.Model)
+	// Set the appropriate content type
+	w.Header().Set("Content-Type", "audio/mpeg")
+
+	// Synthesize the audio and get the buffer
+	buffer, err := synthesizeAudioStream(requestData.Text, requestData.Model)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to synthesize speech: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// Open the audio file
-	audioFile, err := os.Open(audioFilePath)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to open audio file: %v", err), http.StatusInternalServerError)
-		return
-	}
-	defer audioFile.Close()
-
-	// Set the appropriate content type
-	w.Header().Set("Content-Type", "audio/mpeg")
-
-	// Copy the audio file content to the response writer
-	if _, err := io.Copy(w, audioFile); err != nil {
-		http.Error(w, fmt.Sprintf("Failed to write audio file to response: %v", err), http.StatusInternalServerError)
+	// Write the contents of the buffer to the response writer
+	if _, err := w.Write(buffer.Bytes()); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to write audio data to response: %v", err), http.StatusInternalServerError)
 		return
 	}
 }

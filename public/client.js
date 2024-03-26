@@ -57,7 +57,6 @@ function playButtonClick() {
   }
 }
 
-// Remove error message when the text area has a value
 textArea.addEventListener("input", () => {
   errorMessage.innerHTML = "";
 });
@@ -91,11 +90,14 @@ function sendData() {
         playState = PLAY_STATES.PLAYING;
         updatePlayButton();
 
+        // Check if there's an existing audio source and stop it
         stopAudio();
 
+        // Create a Blob from the response data
         return response.blob();
       })
       .then((blob) => {
+        // Create an object URL from the Blob
         const audioUrl = URL.createObjectURL(blob);
 
         // Create an audio element and play the audio URL
