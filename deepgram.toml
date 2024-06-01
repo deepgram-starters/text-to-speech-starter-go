@@ -1,0 +1,16 @@
+[meta]
+  title = "Text-to-speech Go Starter"
+  description = "This example app demonstrates how to use the Deepgram Text-to-Speech API with Go."
+  author = "Deepgram DX Team <devrel@deepgram.com> (https://developers.deepgram.com)"
+  useCase = "TTS"
+  language = "Go"
+
+[build]
+  command = "go get"
+
+[config]
+  sample = "sample.env"
+  output = ".env"
+
+[post-build]
+  message = "Run `go run .` to get up and running."
