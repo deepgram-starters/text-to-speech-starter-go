@@ -6,6 +6,7 @@ repository = "https://github.com/deepgram-starters/go-text-to-speech"
 useCase = "text-to-speech"
 language = "go"
 framework = "go"
+sdk = "deepgram-go-sdk"
 tags = ["text-to-speech", "tts", "audio-generation", "go"]
 
 [install.pre]
