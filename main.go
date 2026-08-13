@@ -15,11 +15,11 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -29,6 +29,10 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
+
+	speakrest "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v1/rest"
+	dginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	speak "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak"
 )
 
 // ============================================================================
@@ -264,48 +268,23 @@ func formatErrorResponse(message string, statusCode int, errorCode string) Error
 }
 
 // ============================================================================
-// DEEPGRAM API - Direct HTTP calls to the Deepgram TTS endpoint
+// DEEPGRAM API - Official Deepgram Go SDK (Text-to-Speech REST)
 // ============================================================================
 
-// generateAudio calls the Deepgram TTS API directly and returns the audio bytes.
-// It sends a JSON body with the text and passes the model as a query parameter.
+// generateAudio calls the Deepgram TTS REST API via the official Go SDK and
+// returns the raw audio bytes. No encoding is set, so Deepgram returns MP3 by
+// default — preserving the audio/mpeg contract expected by the frontend.
 func generateAudio(apiKey, text, model string) ([]byte, error) {
-	// Build the JSON payload
-	payload := map[string]string{"text": text}
-	payloadBytes, err := json.Marshal(payload)
+	c := speak.NewREST(apiKey, &dginterfaces.ClientOptions{})
+	dg := speakrest.New(c)
+
+	var buf dginterfaces.RawResponse // RawResponse embeds bytes.Buffer
+	_, err := dg.ToStream(context.Background(), text, &dginterfaces.SpeakOptions{Model: model}, &buf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
+		return nil, fmt.Errorf("Deepgram TTS failed: %w", err)
 	}
 
-	// Build the request to Deepgram TTS API
-	url := "https://api.deepgram.com/v1/speak?model=" + model
-	req, err := http.NewRequest("POST", url, strings.NewReader(string(payloadBytes)))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-	req.Header.Set("Authorization", "Token "+apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	// Execute the request
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to call Deepgram API: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Read the response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
-
-	// Check for API errors (non-2xx status)
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("Deepgram API error (status %d): %s", resp.StatusCode, string(body))
-	}
-
-	return body, nil
+	return buf.Bytes(), nil
 }
 
 // ============================================================================
